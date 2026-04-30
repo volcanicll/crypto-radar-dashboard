@@ -3,7 +3,6 @@ import ScoreBar from '../shared/ScoreBar'
 import { Pill } from '../shared/StatusPill'
 import { fmtMcap, fmtPct } from '../../logic/scoring'
 import type { NarrativeCategory, NarrativeRadarData, NarrativeToken } from '../../types'
-import { manualMomentumCheck } from '../../logic/narrative-tracker'
 
 interface Props {
   data: NarrativeRadarData | undefined

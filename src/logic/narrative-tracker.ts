@@ -188,17 +188,18 @@ function updateMomentum(tokens: NarrativeToken[]): void {
 
 // === 去重/新颖性 ===
 
-function cleanStore<T extends Record<string, { lastSeenAt?: number }>>(
-  store: T,
-  maxAge: number,
-  now: number,
-): T {
-  const cleaned = {} as T
+function cleanSeenStore(store: SeenStore, maxAge: number, now: number): SeenStore {
+  const cleaned: SeenStore = {}
   for (const [key, record] of Object.entries(store)) {
-    const lastTime = (record as Record<string, unknown>).lastSeenAt as number || 0
-    if (now - lastTime < maxAge) {
-      cleaned[key] = record
-    }
+    if (now - record.lastSeenAt < maxAge) cleaned[key] = record
+  }
+  return cleaned
+}
+
+function cleanThemeStore(store: ThemeStore, maxAge: number, now: number): ThemeStore {
+  const cleaned: ThemeStore = {}
+  for (const [key, record] of Object.entries(store)) {
+    if (now - record.lastSeenAt < maxAge) cleaned[key] = record
   }
   return cleaned
 }
@@ -208,8 +209,8 @@ function updateSeenAndThemes(tokens: NarrativeToken[]): void {
   let seenStore = loadJson<SeenStore>(KEYS.seen)
   let themeStore = loadJson<ThemeStore>(KEYS.themes)
 
-  seenStore = cleanStore(seenStore, SEVEN_DAYS, now)
-  themeStore = cleanStore(themeStore, SEVEN_DAYS, now)
+  seenStore = cleanSeenStore(seenStore, SEVEN_DAYS, now)
+  themeStore = cleanThemeStore(themeStore, SEVEN_DAYS, now)
 
   for (const token of tokens) {
     // 代币去重

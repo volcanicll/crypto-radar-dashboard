@@ -5,7 +5,7 @@ import { analyzeAccumulation } from '../logic/accumulation'
 import { detectOIAlerts } from '../logic/oi-detector'
 import { computeAllScores } from '../logic/scoring'
 import { detectShortFuel } from '../logic/short-fuel'
-import { processNarrativeData, manualMomentumCheck } from '../logic/narrative-tracker'
+import { processNarrativeData } from '../logic/narrative-tracker'
 import type { AccumulationResult, OIAlert, MarketOverview, NarrativeRadarData } from '../types'
 
 export { manualMomentumCheck } from '../logic/narrative-tracker'
