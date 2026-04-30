@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { getOIHist, getFundingRateHistory } from '../../api/binance'
+import { useLongShortRatio } from '../../api/hooks'
 import { fmtUsd, fmtMcap } from '../../logic/scoring'
 import type { CoinData } from '../../types'
 
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function DetailDrawer({ symbol, coinData, onClose }: Props) {
+  const { data: ratioData } = useLongShortRatio(symbol)
   const [oiHist, setOiHist] = useState<number[]>([])
   const [frHist, setFrHist] = useState<number[]>([])
 
@@ -126,6 +128,37 @@ export default function DetailDrawer({ symbol, coinData, onClose }: Props) {
             {d.inCG && <Tag label="CG Trending" color="var(--amber)" />}
             {d.volSurge && <Tag label="放量" color="var(--green)" />}
             {d.frPct < -0.03 && <Tag label="负费率" color="var(--red)" />}
+          </div>
+        )}
+
+        {/* 多空比 */}
+        {ratioData && (ratioData.global.length > 0 || ratioData.topTrader.length > 0) && (
+          <div className="mt-3 pt-3 px-4" style={{ borderTop: '1px solid var(--border-card)' }}>
+            <div className="text-[10px] mb-2 font-semibold" style={{ color: 'var(--text-muted)' }}>Long/Short Ratio</div>
+            {ratioData.global[0] && (
+              <div className="mb-2">
+                <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Global</div>
+                <div className="flex gap-1 items-center text-[10px]">
+                  <span className="w-10 text-right" style={{ color: 'var(--green)' }}>{(ratioData.global[0].longRatio * 100).toFixed(1)}%</span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-card)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${ratioData.global[0].longRatio * 100}%`, background: 'var(--green)' }} />
+                  </div>
+                  <span className="w-10" style={{ color: 'var(--red)' }}>{(ratioData.global[0].shortRatio * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            )}
+            {ratioData.topTrader[0] && (
+              <div>
+                <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-muted)' }}>Top Traders</div>
+                <div className="flex gap-1 items-center text-[10px]">
+                  <span className="w-10 text-right" style={{ color: 'var(--green)' }}>{(ratioData.topTrader[0].longRatio * 100).toFixed(1)}%</span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-card)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${ratioData.topTrader[0].longRatio * 100}%`, background: 'var(--green)' }} />
+                  </div>
+                  <span className="w-10" style={{ color: 'var(--red)' }}>{(ratioData.topTrader[0].shortRatio * 100).toFixed(1)}%</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
