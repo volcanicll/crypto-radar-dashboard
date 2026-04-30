@@ -236,3 +236,19 @@ export interface CardLayout {
   w: number
   h: number
 }
+
+export interface LongShortRatio {
+  symbol: string
+  longRatio: number
+  shortRatio: number
+  timestamp: number
+}
+
+export interface LiquidationEvent {
+  symbol: string
+  side: 'LONG' | 'SHORT'
+  price: number
+  quantity: number
+  quoteQuantity: number
+  timestamp: number
+}
