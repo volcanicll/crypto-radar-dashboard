@@ -3,6 +3,7 @@ import ScoreBar from '../shared/ScoreBar'
 import { Pill } from '../shared/StatusPill'
 import { fmtMcap, fmtPct } from '../../logic/scoring'
 import type { NarrativeCategory, NarrativeRadarData, NarrativeToken } from '../../types'
+import { manualMomentumCheck } from '../../logic/narrative-tracker'
 
 interface Props {
   data: NarrativeRadarData | undefined
@@ -38,12 +39,32 @@ function TokenRow({ token }: { token: NarrativeToken }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-wrap">
             <span className="font-semibold text-sm truncate" style={{ color: 'var(--accent)' }}>
               {token.symbol}
             </span>
             <Pill label={token.chain.toUpperCase()} color={category.color} />
             <Stars count={token.stars} />
+            {token.momentumSignal && (
+              <span className="text-xs" title={`连涨${token.momentumSignal.rounds}轮 +${token.momentumSignal.pctGain.toFixed(1)}%`}>
+                🔥
+              </span>
+            )}
+            {token.safety === 'safe' && (
+              <span className="text-[10px]" title="安全">🛡️</span>
+            )}
+            {token.safety === 'warning' && (
+              <span className="text-[10px]" title={`风险: ${token.safetyFlags.join(', ')}`} style={{ color: 'var(--red)' }}>⚠️</span>
+            )}
+            {token.isNew && (
+              <Pill label="新" color="#3b82f6" />
+            )}
+            {token.isNovelNarrative && (
+              <Pill label="新叙事" color="#8b5cf6" />
+            )}
+            {token.isHeating && (
+              <Pill label="升温" color="#f97316" />
+            )}
           </div>
           <div className="truncate text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
             {token.narrative}
@@ -66,23 +87,45 @@ function TokenRow({ token }: { token: NarrativeToken }) {
           {token.supportReason}
         </div>
       )}
+      {token.momentumSignal && (
+        <div className="mt-1 text-[10px]" style={{ color: 'var(--green)' }}>
+          连涨{token.momentumSignal.rounds}轮 +{token.momentumSignal.pctGain.toFixed(1)}%
+          {token.momentumSignal.volIncreasing ? ' · 放量' : ''}
+          {token.momentumSignal.signalCount > 1 ? ` · #${token.momentumSignal.signalCount}` : ''}
+        </div>
+      )}
+      {token.seenCount > 1 && (
+        <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          已出现 {token.seenCount} 次
+        </div>
+      )}
     </a>
   )
 }
 
 export default function NarrativeRadar({ data, error }: Props) {
   const clusters = data?.clusters || []
-  const tokens = data?.tokens || []
+  const tokenList = data?.tokens || []
   const topCluster = clusters[0]
+  const momentumCount = tokenList.filter((t) => t.momentumSignal).length
+  const newCount = tokenList.filter((t) => t.isNew).length
 
   return (
     <CardShell
       title="链上叙事雷达"
       icon="🛰️"
       extra={
-        <span className="text-xs" style={{ color: error ? 'var(--red)' : 'var(--text-muted)' }}>
-          {error ? 'API未连接' : data ? new Date(data.updatedAt).toLocaleTimeString('zh-CN', { hour12: false }) : '扫描中'}
-        </span>
+        <div className="flex items-center gap-3 text-xs">
+          {momentumCount > 0 && (
+            <span style={{ color: 'var(--green)' }}>🔥 {momentumCount}</span>
+          )}
+          {newCount > 0 && (
+            <span style={{ color: '#3b82f6' }}>新 {newCount}</span>
+          )}
+          <span style={{ color: error ? 'var(--red)' : 'var(--text-muted)' }}>
+            {error ? 'API未连接' : data ? new Date(data.updatedAt).toLocaleTimeString('zh-CN', { hour12: false }) : '扫描中'}
+          </span>
+        </div>
       }
     >
       {!data && !error ? (
@@ -144,8 +187,21 @@ export default function NarrativeRadar({ data, error }: Props) {
           </div>
 
           <div className="overflow-auto pr-1">
+            {/* 动量信号代币优先展示 */}
+            {momentumCount > 0 && (
+              <div className="mb-2">
+                <div className="text-[10px] mb-1 font-semibold" style={{ color: 'var(--green)' }}>
+                  动量信号 ({momentumCount})
+                </div>
+                <div className="grid grid-cols-2 gap-2 max-[1100px]:grid-cols-1">
+                  {tokenList.filter((t) => t.momentumSignal).slice(0, 6).map((token) => (
+                    <TokenRow key={token.address} token={token} />
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2 max-[1100px]:grid-cols-1">
-              {tokens.slice(0, 12).map((token) => (
+              {tokenList.slice(0, 12).map((token) => (
                 <TokenRow key={token.address} token={token} />
               ))}
             </div>
