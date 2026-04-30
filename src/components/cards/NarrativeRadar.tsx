@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import CardShell from '../shared/CardShell'
 import ScoreBar from '../shared/ScoreBar'
 import { Pill } from '../shared/StatusPill'
@@ -98,16 +99,51 @@ function TokenRow({ token }: { token: NarrativeToken }) {
           已出现 {token.seenCount} 次
         </div>
       )}
+      {token.description && (
+        <div className="text-[10px] truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          {token.description}
+        </div>
+      )}
+      {token.socials && (
+        <div className="flex gap-2 mt-0.5">
+          {token.socials.twitter && (
+            <a href={token.socials.twitter} target="_blank" rel="noreferrer" className="text-[10px]" onClick={e => e.stopPropagation()}>🐦</a>
+          )}
+          {token.socials.telegram && (
+            <a href={token.socials.telegram} target="_blank" rel="noreferrer" className="text-[10px]" onClick={e => e.stopPropagation()}>✈️</a>
+          )}
+          {token.socials.website && (
+            <a href={token.socials.website} target="_blank" rel="noreferrer" className="text-[10px]" onClick={e => e.stopPropagation()}>🌐</a>
+          )}
+        </div>
+      )}
     </a>
   )
 }
 
 export default function NarrativeRadar({ data, error }: Props) {
+  const [filter, setFilter] = useState<NarrativeCategory | 'all'>('all')
+  const [sortBy, setSortBy] = useState<'score' | 'chg1h' | 'buyRatio' | 'mc' | 'momentum'>('score')
+  const [expanded, setExpanded] = useState(false)
+
   const clusters = data?.clusters || []
-  const tokenList = data?.tokens || []
+  const allTokens = data?.tokens || []
+  const filtered = filter === 'all' ? allTokens : allTokens.filter(t => t.category === filter)
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === 'momentum') {
+      const aVal = a.momentumSignal ? a.momentumSignal.pctGain : -1
+      const bVal = b.momentumSignal ? b.momentumSignal.pctGain : -1
+      return bVal - aVal
+    }
+    if (sortBy === 'chg1h') return b.chg1h - a.chg1h
+    if (sortBy === 'buyRatio') return b.buyRatio - a.buyRatio
+    if (sortBy === 'mc') return b.mc - a.mc
+    return b.score - a.score
+  })
+  const tokenList = expanded ? sorted : sorted.slice(0, 12)
   const topCluster = clusters[0]
-  const momentumCount = tokenList.filter((t) => t.momentumSignal).length
-  const newCount = tokenList.filter((t) => t.isNew).length
+  const momentumCount = allTokens.filter((t) => t.momentumSignal).length
+  const newCount = allTokens.filter((t) => t.isNew).length
 
   return (
     <CardShell
@@ -186,6 +222,33 @@ export default function NarrativeRadar({ data, error }: Props) {
           </div>
 
           <div className="overflow-auto pr-1">
+            <div className="flex items-center gap-1 mb-2 flex-wrap">
+              {(['all', 'musk_trump', 'binance_cz', 'celebrity_viral', 'flap_support', 'emerging'] as const).map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className="text-[10px] px-1.5 py-0.5 rounded cursor-pointer"
+                  style={{
+                    background: filter === cat ? 'var(--accent)' : 'var(--border-card)',
+                    color: filter === cat ? 'white' : 'var(--text-muted)',
+                  }}
+                >
+                  {cat === 'all' ? 'All' : CATEGORY_LABEL[cat].label}
+                </button>
+              ))}
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as typeof sortBy)}
+                className="text-[10px] px-1 py-0.5 rounded ml-auto"
+                style={{ background: 'var(--border-card)', color: 'var(--text-secondary)', border: 'none' }}
+              >
+                <option value="score">Score</option>
+                <option value="chg1h">1h Change</option>
+                <option value="buyRatio">Buy Ratio</option>
+                <option value="mc">Market Cap</option>
+                <option value="momentum">Momentum</option>
+              </select>
+            </div>
             {/* 动量信号代币优先展示 */}
             {momentumCount > 0 && (
               <div className="mb-2">
@@ -204,6 +267,15 @@ export default function NarrativeRadar({ data, error }: Props) {
                 <TokenRow key={token.address} token={token} />
               ))}
             </div>
+            {filtered.length > 12 && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="text-[10px] w-full text-center py-1 mt-1 rounded cursor-pointer"
+                style={{ color: 'var(--accent)', background: 'var(--border-card)' }}
+              >
+                {expanded ? 'Show less' : `Show all (${filtered.length})`}
+              </button>
+            )}
           </div>
         </div>
       )}
