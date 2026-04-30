@@ -305,6 +305,43 @@ async function enrichSafety(
   }
 }
 
+async function fetchDescriptions(
+  tokens: ReturnType<typeof toNarrativeToken>[],
+): Promise<void> {
+  const candidates = tokens.filter((t) => t.score >= 60).slice(0, 20)
+  if (!candidates.length) return
+
+  await Promise.all(
+    candidates.map(async (token) => {
+      try {
+        const resp = await fetch(
+          `https://api.dexscreener.com/latest/dex/tokens/${token.address}`,
+          { signal: timeoutSignal(5000) },
+        )
+        const json = await resp.json()
+        const pair = json?.pairs?.[0]
+        if (!pair) return
+
+        if (pair.description) token.description = pair.description
+        const info = pair.info || {}
+        if (info.socials?.length) {
+          const socials: { twitter?: string; telegram?: string; website?: string } = {}
+          for (const s of info.socials) {
+            if (s.type === 'twitter' && s.url) socials.twitter = s.url
+            if (s.type === 'telegram' && s.url) socials.telegram = s.url
+            if (s.type === 'website' && s.url) socials.website = s.url
+          }
+          if (socials.twitter || socials.telegram || socials.website) {
+            token.socials = socials
+          }
+        }
+      } catch {
+        // 超时或失败，保持 undefined
+      }
+    }),
+  )
+}
+
 function buildClusters(tokens: ReturnType<typeof toNarrativeToken>[]) {
   const grouped = new Map<string, ReturnType<typeof toNarrativeToken>[]>()
   for (const token of tokens) {
@@ -369,6 +406,8 @@ function toNarrativeToken(token: RawToken) {
     seenCount: 0,
     isNovelNarrative: false,
     isHeating: false,
+    description: undefined as string | undefined,
+    socials: undefined as { twitter?: string; telegram?: string; website?: string } | undefined,
   }
 }
 
@@ -390,6 +429,7 @@ export default async function handler(_req: unknown, res: {
       .slice(0, 80)
 
     await enrichSafety(tokens)
+    await fetchDescriptions(tokens)
 
     res.status(200).json({
       updatedAt: new Date().toISOString(),
