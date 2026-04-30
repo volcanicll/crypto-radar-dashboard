@@ -1,12 +1,12 @@
 import useSWR from 'swr'
-import { getPerpSymbols, getDailyKlines, getAllTickers, getAllFundingRates, getMarketCaps } from './binance'
+import { getPerpSymbols, getDailyKlines, getAllTickers, getAllFundingRates, getMarketCaps, getGlobalLongShortRatio, getTopTraderRatio, getLiquidations } from './binance'
 import { getTrendingCoins } from './coingecko'
 import { analyzeAccumulation } from '../logic/accumulation'
 import { detectOIAlerts } from '../logic/oi-detector'
 import { computeAllScores } from '../logic/scoring'
 import { detectShortFuel } from '../logic/short-fuel'
 import { processNarrativeData } from '../logic/narrative-tracker'
-import type { AccumulationResult, OIAlert, MarketOverview, NarrativeRadarData } from '../types'
+import type { AccumulationResult, OIAlert, MarketOverview, NarrativeRadarData, LongShortRatio, LiquidationEvent } from '../types'
 
 export { manualMomentumCheck } from '../logic/narrative-tracker'
 
@@ -130,5 +130,29 @@ export function useMarketOverview(tickers: Record<string, any>, fundingRates: Re
       } as MarketOverview
     },
     { refreshInterval: 60_000, dedupingInterval: 30_000 }
+  )
+}
+
+export function useLongShortRatio(symbol: string | null) {
+  return useSWR<{ global: LongShortRatio[]; topTrader: LongShortRatio[] }>(
+    symbol ? `ls-ratio-${symbol}` : null,
+    async () => {
+      const [global, topTrader] = await Promise.all([
+        getGlobalLongShortRatio(symbol!),
+        getTopTraderRatio(symbol!),
+      ])
+      return { global, topTrader }
+    },
+    { refreshInterval: 300_000, dedupingInterval: 240_000 },
+  )
+}
+
+export function useLiquidations() {
+  return useSWR<LiquidationEvent[]>(
+    'liquidations',
+    async () => {
+      return getLiquidations()
+    },
+    { refreshInterval: 60_000, dedupingInterval: 50_000 },
   )
 }
