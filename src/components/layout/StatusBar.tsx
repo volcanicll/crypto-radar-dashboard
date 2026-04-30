@@ -3,9 +3,10 @@ import type { MarketOverview } from '../../types'
 interface Props {
   data: MarketOverview | undefined
   countdown: number
+  onSearchOpen?: () => void
 }
 
-export default function StatusBar({ data, countdown }: Props) {
+export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
   return (
     <div
       className="flex items-center justify-between gap-4 px-4 py-3 select-none max-[820px]:flex-wrap"
@@ -46,8 +47,16 @@ export default function StatusBar({ data, countdown }: Props) {
           刷新 <b style={{ color: 'var(--accent)' }}>{countdown}s</b>
         </span>
         <button
+          onClick={onSearchOpen}
+          className="text-xs px-1.5 py-0.5 rounded cursor-pointer"
+          style={{ color: 'var(--text-muted)', background: 'var(--border-card)' }}
+          title="搜索 (⌘K)"
+        >
+          🔍
+        </button>
+        <button
           onClick={() => { localStorage.removeItem('dashboard-layout'); location.reload() }}
-          className="text-xs px-1.5 py-0.5 rounded"
+          className="text-xs px-1.5 py-0.5 rounded cursor-pointer"
           style={{ color: 'var(--text-muted)', background: 'var(--border-card)' }}
           title="Reset layout"
         >

@@ -3,13 +3,21 @@ import StatusPill from '../shared/StatusPill'
 import ScoreBar from '../shared/ScoreBar'
 import { fmtUsd } from '../../logic/scoring'
 import type { AccumulationResult } from '../../types'
+import type { SignalStatusMap } from '../../logic/signal-tracker'
 
 interface Props {
   data: AccumulationResult[]
   onSelect?: (symbol: string) => void
+  signalStatus?: SignalStatusMap
 }
 
-export default function AccumulationPool({ data, onSelect }: Props) {
+const MARKER: Record<string, { label: string; color: string }> = {
+  new: { label: '🆕', color: '#3b82f6' },
+  lost: { label: '📉', color: '#ef4444' },
+  persistent: { label: '⚡', color: '#f59e0b' },
+}
+
+export default function AccumulationPool({ data, onSelect, signalStatus }: Props) {
   if (!data || data.length === 0) {
     return (
       <CardShell title="收筹标的池" icon="🏦">
@@ -39,32 +47,36 @@ export default function AccumulationPool({ data, onSelect }: Props) {
             </tr>
           </thead>
           <tbody>
-            {data.map((r) => (
-              <tr
-                key={r.symbol}
-                className="table-row cursor-pointer"
-                onClick={() => onSelect?.(r.symbol)}
-              >
-                <td className="py-1 px-1 font-semibold" style={{ color: 'var(--accent)' }}>
-                  {r.coin}
-                </td>
-                <td className="py-1 px-1">
-                  <ScoreBar score={Math.round(r.score)} max={100} />
-                </td>
-                <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-                  {r.sidewaysDays}d
-                </td>
-                <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-                  {r.rangePct.toFixed(0)}%
-                </td>
-                <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-                  {fmtUsd(r.avgVol)}
-                </td>
-                <td className="py-1 px-1 text-center">
-                  <StatusPill status={r.status} />
-                </td>
-              </tr>
-            ))}
+            {data.map((r) => {
+              const marker = signalStatus?.[r.symbol]
+              return (
+                <tr
+                  key={r.symbol}
+                  className="table-row cursor-pointer"
+                  onClick={() => onSelect?.(r.symbol)}
+                >
+                  <td className="py-1 px-1 font-semibold" style={{ color: 'var(--accent)' }}>
+                    {r.coin}
+                    {marker && <span className="ml-1">{MARKER[marker]?.label}</span>}
+                  </td>
+                  <td className="py-1 px-1">
+                    <ScoreBar score={Math.round(r.score)} max={100} />
+                  </td>
+                  <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                    {r.sidewaysDays}d
+                  </td>
+                  <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                    {r.rangePct.toFixed(0)}%
+                  </td>
+                  <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                    {fmtUsd(r.avgVol)}
+                  </td>
+                  <td className="py-1 px-1 text-center">
+                    <StatusPill status={r.status} />
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

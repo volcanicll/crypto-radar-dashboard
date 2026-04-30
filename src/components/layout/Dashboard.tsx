@@ -12,6 +12,7 @@ import AmbushStrategy from '../cards/AmbushStrategy'
 import NarrativeRadar from '../cards/NarrativeRadar'
 import ErrorBoundary from '../shared/ErrorBoundary'
 import type { AccumulationResult, OIAlert, ChaseCandidate, CombinedScore, AmbushCandidate, ShortFuelTarget, NarrativeRadarData, LiquidationEvent } from '../../types'
+import type { TrackResult } from '../../logic/signal-tracker'
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: 'narrative', x: 0, y: 0, w: 8, h: 9, minW: 5, minH: 6 },
@@ -57,10 +58,11 @@ interface Props {
   narrative: NarrativeRadarData | undefined
   narrativeError?: unknown
   onSelectSymbol: (symbol: string) => void
+  signalDiff?: TrackResult
 }
 
 export default function Dashboard({
-  pool, oiAlerts, chase, combined, ambush, fuel, squeeze, liquidations, narrative, narrativeError, onSelectSymbol,
+  pool, oiAlerts, chase, combined, ambush, fuel, squeeze, liquidations, narrative, narrativeError, onSelectSymbol, signalDiff,
 }: Props) {
   const { width, containerRef, mounted } = useContainerWidth()
   const [layouts, setLayouts] = useState<LayoutItem[]>(() => loadLayout() || DEFAULT_LAYOUT)
@@ -91,14 +93,14 @@ export default function Dashboard({
         compactor={preserveLayout}
         margin={[8, 8] as [number, number]}
       >
-        <div key="narrative">
-          <ErrorBoundary><NarrativeRadar data={narrative} error={narrativeError} /></ErrorBoundary>
+        <div key="narrative" data-card-key="narrative">
+          <ErrorBoundary><NarrativeRadar data={narrative} error={narrativeError} signalStatus={signalDiff?.narrativeMomentum} /></ErrorBoundary>
         </div>
-        <div key="pool">
-          <ErrorBoundary><AccumulationPool data={pool} onSelect={onSelectSymbol} /></ErrorBoundary>
+        <div key="pool" data-card-key="pool">
+          <ErrorBoundary><AccumulationPool data={pool} onSelect={onSelectSymbol} signalStatus={signalDiff?.pool} /></ErrorBoundary>
         </div>
-        <div key="oi">
-          <ErrorBoundary><OIMonitor data={oiAlerts} onSelect={onSelectSymbol} /></ErrorBoundary>
+        <div key="oi" data-card-key="oi">
+          <ErrorBoundary><OIMonitor data={oiAlerts} onSelect={onSelectSymbol} signalStatus={signalDiff?.oiAlerts} /></ErrorBoundary>
         </div>
         <div key="chase">
           <ErrorBoundary><ChaseStrategy data={chase} onSelect={onSelectSymbol} /></ErrorBoundary>
@@ -106,11 +108,11 @@ export default function Dashboard({
         <div key="combined">
           <ErrorBoundary><CombinedStrategy data={combined} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
-        <div key="shortFuel">
-          <ErrorBoundary><ShortFuel fuel={fuel} squeeze={squeeze} liquidations={liquidations} onSelect={onSelectSymbol} /></ErrorBoundary>
+        <div key="shortFuel" data-card-key="shortFuel">
+          <ErrorBoundary><ShortFuel fuel={fuel} squeeze={squeeze} liquidations={liquidations} onSelect={onSelectSymbol} signalStatus={signalDiff?.squeeze} /></ErrorBoundary>
         </div>
-        <div key="ambush">
-          <ErrorBoundary><AmbushStrategy data={ambush} onSelect={onSelectSymbol} /></ErrorBoundary>
+        <div key="ambush" data-card-key="ambush">
+          <ErrorBoundary><AmbushStrategy data={ambush} onSelect={onSelectSymbol} signalStatus={signalDiff?.ambush} /></ErrorBoundary>
         </div>
       </ResponsiveGridLayout>
     </div>

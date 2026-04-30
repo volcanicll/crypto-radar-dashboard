@@ -2,13 +2,21 @@ import CardShell from '../shared/CardShell'
 import { Pill } from '../shared/StatusPill'
 import { fmtMcap } from '../../logic/scoring'
 import type { AmbushCandidate } from '../../types'
+import type { SignalStatusMap } from '../../logic/signal-tracker'
+
+const MARKER: Record<string, string> = {
+  new: '🆕',
+  lost: '📉',
+  persistent: '⚡',
+}
 
 interface Props {
   data: AmbushCandidate[]
   onSelect?: (symbol: string) => void
+  signalStatus?: SignalStatusMap
 }
 
-export default function AmbushStrategy({ data, onSelect }: Props) {
+export default function AmbushStrategy({ data, onSelect, signalStatus }: Props) {
   return (
     <CardShell
       title="埋伏策略"
@@ -24,6 +32,7 @@ export default function AmbushStrategy({ data, onSelect }: Props) {
           <div className="space-y-1">
             {data.slice(0, 8).map((s) => {
               const isDarkFlow = s.d6h > 2 && Math.abs(s.pxChg) < 5
+              const marker = signalStatus?.[s.symbol]
               return (
                 <div
                   key={s.symbol}
@@ -33,6 +42,7 @@ export default function AmbushStrategy({ data, onSelect }: Props) {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{s.coin}</span>
+                      {marker && <span className="text-xs">{MARKER[marker]}</span>}
                       <span className="text-sm font-bold">{s.total}分</span>
                     </div>
                     <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>

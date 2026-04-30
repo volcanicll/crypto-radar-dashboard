@@ -4,10 +4,12 @@ import ScoreBar from '../shared/ScoreBar'
 import { Pill } from '../shared/StatusPill'
 import { fmtMcap, fmtPct } from '../../logic/scoring'
 import type { NarrativeCategory, NarrativeRadarData, NarrativeToken } from '../../types'
+import type { SignalStatusMap } from '../../logic/signal-tracker'
 
 interface Props {
   data: NarrativeRadarData | undefined
   error?: unknown
+  signalStatus?: SignalStatusMap
 }
 
 const CATEGORY_LABEL: Record<NarrativeCategory, { label: string; color: string }> = {
@@ -121,7 +123,9 @@ function TokenRow({ token }: { token: NarrativeToken }) {
   )
 }
 
-export default function NarrativeRadar({ data, error }: Props) {
+const SIGNAL_MARKER: Record<string, string> = { new: '🆕', lost: '📉', persistent: '⚡' }
+
+export default function NarrativeRadar({ data, error, signalStatus }: Props) {
   const [filter, setFilter] = useState<NarrativeCategory | 'all'>('all')
   const [sortBy, setSortBy] = useState<'score' | 'chg1h' | 'buyRatio' | 'mc' | 'momentum'>('score')
   const [expanded, setExpanded] = useState(false)
@@ -256,9 +260,18 @@ export default function NarrativeRadar({ data, error }: Props) {
                   动量信号 ({momentumCount})
                 </div>
                 <div className="grid grid-cols-2 gap-2 max-[1100px]:grid-cols-1">
-                  {tokenList.filter((t) => t.momentumSignal).slice(0, 6).map((token) => (
-                    <TokenRow key={token.address} token={token} />
-                  ))}
+                  {tokenList.filter((t) => t.momentumSignal).slice(0, 6).map((token) => {
+                    const key = `${token.symbol}-${token.chain}`
+                    const mk = signalStatus?.[key]
+                    return (
+                      <div key={token.address} className="relative">
+                        {mk && SIGNAL_MARKER[mk] && (
+                          <span className="absolute top-1 right-1 text-xs">{SIGNAL_MARKER[mk]}</span>
+                        )}
+                        <TokenRow token={token} />
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
