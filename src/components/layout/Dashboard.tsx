@@ -10,6 +10,7 @@ import CombinedStrategy from '../cards/CombinedStrategy'
 import ShortFuel from '../cards/ShortFuel'
 import AmbushStrategy from '../cards/AmbushStrategy'
 import NarrativeRadar from '../cards/NarrativeRadar'
+import ErrorBoundary from '../shared/ErrorBoundary'
 import type { AccumulationResult, OIAlert, ChaseCandidate, CombinedScore, AmbushCandidate, ShortFuelTarget, NarrativeRadarData } from '../../types'
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
@@ -71,25 +72,25 @@ export default function Dashboard({
         margin={[8, 8] as [number, number]}
       >
         <div key="narrative">
-          <NarrativeRadar data={narrative} error={narrativeError} />
+          <ErrorBoundary><NarrativeRadar data={narrative} error={narrativeError} /></ErrorBoundary>
         </div>
         <div key="pool">
-          <AccumulationPool data={pool} onSelect={onSelectSymbol} />
+          <ErrorBoundary><AccumulationPool data={pool} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="oi">
-          <OIMonitor data={oiAlerts} onSelect={onSelectSymbol} />
+          <ErrorBoundary><OIMonitor data={oiAlerts} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="chase">
-          <ChaseStrategy data={chase} onSelect={onSelectSymbol} />
+          <ErrorBoundary><ChaseStrategy data={chase} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="combined">
-          <CombinedStrategy data={combined} onSelect={onSelectSymbol} />
+          <ErrorBoundary><CombinedStrategy data={combined} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="shortFuel">
-          <ShortFuel fuel={fuel} squeeze={squeeze} onSelect={onSelectSymbol} />
+          <ErrorBoundary><ShortFuel fuel={fuel} squeeze={squeeze} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="ambush">
-          <AmbushStrategy data={ambush} onSelect={onSelectSymbol} />
+          <ErrorBoundary><AmbushStrategy data={ambush} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
       </ResponsiveGridLayout>
     </div>
