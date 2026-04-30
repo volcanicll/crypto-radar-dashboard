@@ -1,41 +1,121 @@
-# On-Chain Narrative Radar Dashboard
+# Accumulation Radar Dashboard
 
-链上叙事雷达仪表盘，整合：
+A narrative-first crypto trading workbench combining on-chain narrative scanning, Binance perpetual futures analytics, and CoinGecko trending data into a single real-time dashboard.
 
-- `On-Chain-Narrative-Radar.py` 的 GMGN / FLAP 叙事扫描思路
-- Binance 永续合约收筹池、OI 异动、费率、Short Squeeze 信号
-- CoinGecko 趋势热度
+## Features
 
-前端首页已经改为“叙事优先”的交易工作台：顶部主卡展示链上叙事簇、热点代币、叙事评分、链分布、买卖比和低吸形态。
+### On-Chain Narrative Radar
 
-## 本地开发
+Real-time scanning of new tokens across ETH, BSC, Base, and Solana via GMGN and FLAP APIs:
+
+- **Narrative classification** — Musk/Trump, Binance/CZ, celebrity/viral, FLAP community, emerging narratives with 1-3 star ratings
+- **Momentum tracking** — Detects tokens with 3+ consecutive rounds of price gains (5%+ threshold) with volume confirmation
+- **Token safety checks** — GoPlus API integration for honeypot, tax, mintable, and blacklist detection
+- **Deduplication & novelty** — localStorage-based tracking of seen tokens and narrative themes, with heating detection (3+ tokens per theme)
+- **Token descriptions** — DexScreener integration for project descriptions and social links
+
+### Binance Futures Analytics
+
+- **Accumulation pools** — Detect wallets accumulating perpetual futures positions
+- **Open interest anomalies** — OI spike detection with price divergence signals
+- **Short squeeze signals** — Funding rate + volume + OI combination fuel indicator
+- **Comprehensive scoring** — Multi-factor scoring across accumulation, OI, and market metrics
+
+### Market Overview
+
+- CoinGecko trending coins
+- Binance market-wide tickers and funding rates
+
+## Tech Stack
+
+- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS 4, SWR
+- **API:** Vercel Serverless Functions (Bun runtime)
+- **Data Sources:** GMGN, FLAP, Binance, CoinGecko, GoPlus, DexScreener
+- **State:** localStorage for momentum snapshots and dedup history
+
+## Project Structure
+
+```
+api/
+  narratives.ts          # Serverless API — token scanning, classification, safety, descriptions
+src/
+  api/                   # Data fetching hooks (SWR)
+    binance.ts           # Binance futures API
+    coingecko.ts         # CoinGecko trending API
+    hooks.ts             # SWR hooks for all data sources
+  components/
+    cards/               # Dashboard card components
+      NarrativeRadar.tsx # On-chain narrative radar card
+      AccumulationPool.tsx
+      OIMonitor.tsx
+      ShortFuel.tsx
+      ...
+    layout/              # Dashboard grid, detail drawer, status bar
+    shared/              # CardShell, ScoreBar, Sparkline, StatusPill
+  logic/
+    narrative-tracker.ts # Momentum tracking, dedup, novelty detection (localStorage)
+    accumulation.ts      # Accumulation analysis
+    oi-detector.ts       # OI anomaly detection
+    scoring.ts           # Multi-factor scoring engine
+    short-fuel.ts        # Short squeeze fuel calculator
+  types/
+    index.ts             # All TypeScript type definitions
+```
+
+## Getting Started
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) >= 1.0
+- Node.js >= 20 (for Vercel CLI if deploying manually)
+
+### Local Development
 
 ```bash
 bun install
 bun run dev
 ```
 
-Vite 本地开发只运行静态前端，不会自动启动 Vercel Serverless API；`链上叙事雷达`卡片在本地可能显示 API 未连接。部署到 Vercel 后会读取 `/api/narratives`。
+Open `http://localhost:5173`. Note: The narrative radar card requires the Vercel Serverless API. In local dev mode, it will show "API unavailable" — this is expected.
 
-## Vercel 部署
+### Vercel Deployment (One-Click)
 
-项目已包含 `vercel.json`：
+1. Push this repo to GitHub
+2. Import the repo in [Vercel Dashboard](https://vercel.com/new)
+3. Framework preset: **Vite** (auto-detected)
+4. Deploy — no additional configuration needed
 
-- `installCommand`: `bun install`
-- `buildCommand`: `bun run build`
-- `outputDirectory`: `dist`
-- Serverless API: `api/narratives.ts`
-- SPA rewrite: 非 `/api/*` 路由回落到 `index.html`
+The included `vercel.json` handles everything:
 
-部署方式：
+- Build command: `bun run build`
+- Output directory: `dist`
+- Serverless function: `api/narratives.ts` (30s timeout)
+- SPA rewrite: all non-API routes fallback to `index.html`
+
+### Manual Vercel Deploy
 
 ```bash
-vercel
-vercel --prod
+npx vercel
+npx vercel --prod
 ```
 
-或在 Vercel 控制台导入仓库，Framework 选择 Vite 即可。
+## Data Refresh Intervals
 
-## Python 扫描器
+| Data Source | Interval | Storage |
+|---|---|---|
+| GMGN / FLAP tokens | 30s (SWR) | None (stateless API) |
+| GoPlus safety checks | 30s (with token refresh) | None |
+| DexScreener descriptions | 30s (with token refresh) | None |
+| Momentum snapshots | 30s (SWR-driven) | localStorage (12h TTL) |
+| Token dedup history | 30s (SWR-driven) | localStorage (7d TTL) |
+| Narrative themes | 30s (SWR-driven) | localStorage (7d TTL) |
+| Binance market data | 60s | None |
+| Accumulation analysis | 5min | None |
 
-`On-Chain-Narrative-Radar.py` 仍作为本机常驻 bot 使用，包含 SQLite 去重、Telegram 推送和 30 秒轮询。Vercel 不适合运行常驻循环和本地 SQLite，因此线上仪表盘使用 `api/narratives.ts` 提供实时快照 API。
+## Environment Variables
+
+No environment variables required for deployment. All data sources use public APIs.
+
+## License
+
+Private project. All rights reserved.
