@@ -219,6 +219,92 @@ async function fetchFlapTokens() {
   return candidates
 }
 
+interface SafetyResult {
+  safety: 'safe' | 'warning' | 'unknown'
+  safetyFlags: string[]
+}
+
+async function checkTokenSafety(
+  chain: string,
+  addresses: string[],
+): Promise<Map<string, SafetyResult>> {
+  const results = new Map<string, SafetyResult>()
+  if (!addresses.length) return results
+
+  const chainIdMap: Record<string, string> = {
+    eth: '1', bsc: '56', base: '8453', sol: 'solana',
+  }
+  const chainId = chainIdMap[chain]
+  if (!chainId) {
+    for (const addr of addresses) results.set(addr, { safety: 'unknown', safetyFlags: [] })
+    return results
+  }
+
+  const url =
+    chain === 'sol'
+      ? `https://api.gopluslabs.io/api/v1/sol_token_security/v1?contract_addresses=${addresses.join(',')}`
+      : `https://api.gopluslabs.io/api/v1/token_security/${chainId}?contract_addresses=${addresses.join(',')}`
+
+  try {
+    const resp = await fetch(url, { signal: timeoutSignal(5000) })
+    const json = await resp.json()
+    const data = json?.result || {}
+
+    for (const addr of addresses) {
+      const info = data[addr.toLowerCase()] || data[addr]
+      if (!info) {
+        results.set(addr, { safety: 'unknown', safetyFlags: [] })
+        continue
+      }
+
+      const flags: string[] = []
+      if (info.is_honeypot === '1') flags.push('honeypot')
+      if (Number(info.buy_tax || 0) > 0.2 || Number(info.sell_tax || 0) > 0.2) flags.push('tax_high')
+      if (info.is_open_source !== '1') flags.push('not_verified')
+      if (info.is_mintable === '1') flags.push('mintable')
+      if (info.is_blacklisted === '1') flags.push('blacklist')
+
+      results.set(addr, {
+        safety: flags.length > 0 ? 'warning' : 'safe',
+        safetyFlags: flags,
+      })
+    }
+  } catch {
+    for (const addr of addresses) results.set(addr, { safety: 'unknown', safetyFlags: [] })
+  }
+  return results
+}
+
+async function enrichSafety(
+  tokens: ReturnType<typeof toNarrativeToken>[],
+): Promise<void> {
+  const candidates = tokens.filter((t) => t.score >= 60).slice(0, 20)
+  if (!candidates.length) return
+
+  const byChain = new Map<string, string[]>()
+  for (const t of candidates) {
+    const list = byChain.get(t.chain) || []
+    list.push(t.address)
+    byChain.set(t.chain, list)
+  }
+
+  const allResults = new Map<string, SafetyResult>()
+  await Promise.all(
+    [...byChain.entries()].map(async ([chain, addrs]) => {
+      const results = await checkTokenSafety(chain, addrs)
+      for (const [addr, result] of results) allResults.set(addr, result)
+    }),
+  )
+
+  for (const token of tokens) {
+    const result = allResults.get(token.address)
+    if (result) {
+      token.safety = result.safety
+      token.safetyFlags = result.safetyFlags
+    }
+  }
+}
+
 function buildClusters(tokens: ReturnType<typeof toNarrativeToken>[]) {
   const grouped = new Map<string, ReturnType<typeof toNarrativeToken>[]>()
   for (const token of tokens) {
@@ -302,6 +388,8 @@ export default async function handler(_req: unknown, res: {
       .filter((token) => token.category !== 'common' || token.score >= 55)
       .sort((a, b) => b.score - a.score)
       .slice(0, 80)
+
+    await enrichSafety(tokens)
 
     res.status(200).json({
       updatedAt: new Date().toISOString(),
