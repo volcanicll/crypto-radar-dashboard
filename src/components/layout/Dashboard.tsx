@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -22,6 +22,21 @@ const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: 'shortFuel', x: 4, y: 17, w: 4, h: 6, minW: 2, minH: 3 },
   { i: 'ambush', x: 8, y: 17, w: 4, h: 6, minW: 2, minH: 3 },
 ]
+
+const LAYOUT_KEY = 'dashboard-layout'
+
+function loadLayout(): LayoutItem[] | undefined {
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY)
+    return raw ? JSON.parse(raw) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function saveLayout(layout: LayoutItem[]): void {
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)) } catch { /* ignore */ }
+}
 
 const COLS = { lg: 12, md: 12, sm: 6, xs: 4, xxs: 2 }
 const preserveLayout: Compactor = {
@@ -47,10 +62,14 @@ export default function Dashboard({
   pool, oiAlerts, chase, combined, ambush, fuel, squeeze, narrative, narrativeError, onSelectSymbol,
 }: Props) {
   const { width, containerRef, mounted } = useContainerWidth()
-  const [layouts, setLayouts] = useState<LayoutItem[]>(DEFAULT_LAYOUT)
+  const [layouts, setLayouts] = useState<LayoutItem[]>(() => loadLayout() || DEFAULT_LAYOUT)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const onLayoutChange = useCallback((newLayout: readonly LayoutItem[]) => {
-    setLayouts([...newLayout])
+    const next = [...newLayout]
+    setLayouts(next)
+    clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => saveLayout(next), 300)
   }, [])
 
   if (!mounted) {

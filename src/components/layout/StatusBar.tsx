@@ -45,6 +45,14 @@ export default function StatusBar({ data, countdown }: Props) {
         <span>
           刷新 <b style={{ color: 'var(--accent)' }}>{countdown}s</b>
         </span>
+        <button
+          onClick={() => { localStorage.removeItem('dashboard-layout'); location.reload() }}
+          className="text-xs px-1.5 py-0.5 rounded"
+          style={{ color: 'var(--text-muted)', background: 'var(--border-card)' }}
+          title="Reset layout"
+        >
+          ↺
+        </button>
       </div>
     </div>
   )
