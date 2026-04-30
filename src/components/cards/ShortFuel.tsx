@@ -1,14 +1,15 @@
 import CardShell from '../shared/CardShell'
 import { fmtPct, fmtMcap } from '../../logic/scoring'
-import type { ShortFuelTarget } from '../../types'
+import type { ShortFuelTarget, LiquidationEvent } from '../../types'
 
 interface Props {
   fuel: ShortFuelTarget[]
   squeeze: ShortFuelTarget[]
+  liquidations?: LiquidationEvent[]
   onSelect?: (symbol: string) => void
 }
 
-export default function ShortFuel({ fuel, squeeze, onSelect }: Props) {
+export default function ShortFuel({ fuel, squeeze, liquidations, onSelect }: Props) {
   return (
     <CardShell title="空头燃料 + 热度" icon="🔥">
       <div className="overflow-auto h-full space-y-3">
@@ -69,6 +70,25 @@ export default function ShortFuel({ fuel, squeeze, onSelect }: Props) {
         {fuel.length === 0 && squeeze.length === 0 && (
           <div className="flex items-center justify-center h-20 text-xs" style={{ color: 'var(--text-muted)' }}>
             暂无信号
+          </div>
+        )}
+
+        {/* 近期爆仓事件 */}
+        {liquidations && liquidations.length > 0 && (
+          <div className="mt-2 pt-2" style={{ borderTop: '1px solid var(--border-card)' }}>
+            <div className="text-[10px] mb-1 font-semibold" style={{ color: 'var(--red)' }}>Recent Liquidations</div>
+            <div className="space-y-0.5">
+              {liquidations.slice(0, 5).map((liq, i) => (
+                <div key={`${liq.symbol}-${liq.timestamp}-${i}`} className="flex items-center justify-between text-[10px]">
+                  <span style={{ color: liq.side === 'LONG' ? 'var(--red)' : 'var(--green)' }}>
+                    {liq.symbol.replace('USDT', '')} {liq.side === 'LONG' ? 'Long爆' : 'Short爆'}
+                  </span>
+                  <span style={{ color: 'var(--text-muted)' }}>
+                    ${liq.quoteQuantity >= 1000 ? `${(liq.quoteQuantity / 1000).toFixed(1)}K` : liq.quoteQuantity.toFixed(0)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

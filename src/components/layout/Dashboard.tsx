@@ -11,7 +11,7 @@ import ShortFuel from '../cards/ShortFuel'
 import AmbushStrategy from '../cards/AmbushStrategy'
 import NarrativeRadar from '../cards/NarrativeRadar'
 import ErrorBoundary from '../shared/ErrorBoundary'
-import type { AccumulationResult, OIAlert, ChaseCandidate, CombinedScore, AmbushCandidate, ShortFuelTarget, NarrativeRadarData } from '../../types'
+import type { AccumulationResult, OIAlert, ChaseCandidate, CombinedScore, AmbushCandidate, ShortFuelTarget, NarrativeRadarData, LiquidationEvent } from '../../types'
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: 'narrative', x: 0, y: 0, w: 8, h: 9, minW: 5, minH: 6 },
@@ -53,13 +53,14 @@ interface Props {
   ambush: AmbushCandidate[]
   fuel: ShortFuelTarget[]
   squeeze: ShortFuelTarget[]
+  liquidations?: LiquidationEvent[]
   narrative: NarrativeRadarData | undefined
   narrativeError?: unknown
   onSelectSymbol: (symbol: string) => void
 }
 
 export default function Dashboard({
-  pool, oiAlerts, chase, combined, ambush, fuel, squeeze, narrative, narrativeError, onSelectSymbol,
+  pool, oiAlerts, chase, combined, ambush, fuel, squeeze, liquidations, narrative, narrativeError, onSelectSymbol,
 }: Props) {
   const { width, containerRef, mounted } = useContainerWidth()
   const [layouts, setLayouts] = useState<LayoutItem[]>(() => loadLayout() || DEFAULT_LAYOUT)
@@ -106,7 +107,7 @@ export default function Dashboard({
           <ErrorBoundary><CombinedStrategy data={combined} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="shortFuel">
-          <ErrorBoundary><ShortFuel fuel={fuel} squeeze={squeeze} onSelect={onSelectSymbol} /></ErrorBoundary>
+          <ErrorBoundary><ShortFuel fuel={fuel} squeeze={squeeze} liquidations={liquidations} onSelect={onSelectSymbol} /></ErrorBoundary>
         </div>
         <div key="ambush">
           <ErrorBoundary><AmbushStrategy data={ambush} onSelect={onSelectSymbol} /></ErrorBoundary>

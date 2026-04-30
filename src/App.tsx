@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import StatusBar from './components/layout/StatusBar'
 import Dashboard from './components/layout/Dashboard'
 import DetailDrawer from './components/layout/DetailDrawer'
-import { useMarketData, useAccumulationPool, useOIAlerts, useScores, useShortFuel, useNarrativeRadar, useMarketOverview } from './api/hooks'
+import { useMarketData, useAccumulationPool, useOIAlerts, useScores, useShortFuel, useNarrativeRadar, useMarketOverview, useLiquidations } from './api/hooks'
 import type { AccumulationResult } from './types'
 
 function App() {
@@ -74,7 +74,10 @@ function App() {
     pool?.length || 0,
   )
 
-  // 7. 链上叙事雷达（Vercel Serverless）
+  // 7. 爆仓事件
+  const { data: liquidations } = useLiquidations()
+
+  // 8. 链上叙事雷达（Vercel Serverless）
   const { data: narrative, error: narrativeError } = useNarrativeRadar()
 
   return (
@@ -88,6 +91,7 @@ function App() {
         ambush={scores?.ambush || []}
         fuel={shortFuelData?.fuel || []}
         squeeze={shortFuelData?.squeeze || []}
+        liquidations={liquidations}
         narrative={narrative}
         narrativeError={narrativeError}
         onSelectSymbol={setSelectedSymbol}
