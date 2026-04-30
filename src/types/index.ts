@@ -188,6 +188,24 @@ export interface NarrativeToken {
   launchpad?: string
   supportReason?: string
   url: string
+  // 安全检查 (API 层填充)
+  safety: 'safe' | 'warning' | 'unknown'
+  safetyFlags: string[]
+  // 代币描述 (API 层填充)
+  description?: string
+  socials?: { twitter?: string; telegram?: string; website?: string }
+  // 动量追踪 (前端 tracker 填充)
+  momentumSignal?: {
+    pctGain: number
+    rounds: number
+    volIncreasing: boolean
+    signalCount: number
+  }
+  // 去重/新颖性 (前端 tracker 填充)
+  isNew: boolean
+  seenCount: number
+  isNovelNarrative: boolean
+  isHeating: boolean
 }
 
 export interface NarrativeCluster {

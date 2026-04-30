@@ -277,6 +277,12 @@ function toNarrativeToken(token: RawToken) {
     launchpad: token.launchpad,
     supportReason: token.support_reason,
     url: `https://gmgn.ai/${token.chain}/token/${token.address}`,
+    safety: 'unknown',
+    safetyFlags: [],
+    isNew: false,
+    seenCount: 0,
+    isNovelNarrative: false,
+    isHeating: false,
   }
 }
 
