@@ -1,4 +1,4 @@
-import type { Kline, Ticker24h, OIHistPoint } from '../types'
+import type { Kline, Ticker24h, OIHistPoint, LongShortRatio, LiquidationEvent } from '../types'
 
 const FAPI = 'https://fapi.binance.com'
 
@@ -101,4 +101,50 @@ export async function getMarketCaps(): Promise<Record<string, number>> {
   } catch {
     return {}
   }
+}
+
+export async function getGlobalLongShortRatio(
+  symbol: string,
+  period: '5m' | '15m' | '1h' | '4h' | '1d' = '1h',
+  limit = 30,
+): Promise<LongShortRatio[]> {
+  const resp = await fetch(`${FAPI}/futures/data/globalLongShortAccountRatio?symbol=${symbol}&period=${period}&limit=${limit}`, { signal: AbortSignal.timeout(10_000) })
+  if (!resp.ok) return []
+  const data = await resp.json()
+  return (data || []).map((d: Record<string, unknown>) => ({
+    symbol,
+    longRatio: Number(d.longShortRatio || 0),
+    shortRatio: 1 - Number(d.longShortRatio || 0),
+    timestamp: Number(d.timestamp || 0),
+  }))
+}
+
+export async function getTopTraderRatio(
+  symbol: string,
+  period: '5m' | '15m' | '1h' | '4h' | '1d' = '1h',
+  limit = 30,
+): Promise<LongShortRatio[]> {
+  const resp = await fetch(`${FAPI}/futures/data/topLongShortAccountRatio?symbol=${symbol}&period=${period}&limit=${limit}`, { signal: AbortSignal.timeout(10_000) })
+  if (!resp.ok) return []
+  const data = await resp.json()
+  return (data || []).map((d: Record<string, unknown>) => ({
+    symbol,
+    longRatio: Number(d.longShortRatio || 0),
+    shortRatio: 1 - Number(d.longShortRatio || 0),
+    timestamp: Number(d.timestamp || 0),
+  }))
+}
+
+export async function getLiquidations(limit = 50): Promise<LiquidationEvent[]> {
+  const resp = await fetch(`${FAPI}/futures/data/allForceOrders?limit=${limit}`, { signal: AbortSignal.timeout(10_000) })
+  if (!resp.ok) return []
+  const data = await resp.json()
+  return (data || []).map((d: Record<string, unknown>) => ({
+    symbol: String(d.symbol || ''),
+    side: String(d.side || 'LONG') as 'LONG' | 'SHORT',
+    price: Number(d.price || 0),
+    quantity: Number(d.origQty || 0),
+    quoteQuantity: Number(d.price || 0) * Number(d.origQty || 0),
+    timestamp: Number(d.time || 0),
+  }))
 }
