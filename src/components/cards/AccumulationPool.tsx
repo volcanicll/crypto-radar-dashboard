@@ -1,0 +1,73 @@
+import CardShell from '../shared/CardShell'
+import StatusPill from '../shared/StatusPill'
+import ScoreBar from '../shared/ScoreBar'
+import { fmtUsd } from '../../logic/scoring'
+import type { AccumulationResult } from '../../types'
+
+interface Props {
+  data: AccumulationResult[]
+  onSelect?: (symbol: string) => void
+}
+
+export default function AccumulationPool({ data, onSelect }: Props) {
+  if (!data || data.length === 0) {
+    return (
+      <CardShell title="收筹标的池" icon="🏦">
+        <div className="flex items-center justify-center h-full text-sm" style={{ color: 'var(--text-muted)' }}>
+          扫描中...
+        </div>
+      </CardShell>
+    )
+  }
+
+  return (
+    <CardShell
+      title={`收筹标的池 ×${data.length}`}
+      icon="🏦"
+      extra={<span className="text-xs" style={{ color: 'var(--text-muted)' }}>按评分排序</span>}
+    >
+      <div className="overflow-auto h-full">
+        <table className="w-full text-xs">
+          <thead>
+            <tr style={{ color: 'var(--text-muted)' }}>
+              <th className="text-left py-1 px-1 font-normal">币种</th>
+              <th className="text-center py-1 px-1 font-normal">评分</th>
+              <th className="text-center py-1 px-1 font-normal">横盘</th>
+              <th className="text-center py-1 px-1 font-normal">波动</th>
+              <th className="text-center py-1 px-1 font-normal">Vol</th>
+              <th className="text-center py-1 px-1 font-normal">状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((r) => (
+              <tr
+                key={r.symbol}
+                className="table-row cursor-pointer"
+                onClick={() => onSelect?.(r.symbol)}
+              >
+                <td className="py-1 px-1 font-semibold" style={{ color: 'var(--accent)' }}>
+                  {r.coin}
+                </td>
+                <td className="py-1 px-1">
+                  <ScoreBar score={Math.round(r.score)} max={100} />
+                </td>
+                <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                  {r.sidewaysDays}d
+                </td>
+                <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                  {r.rangePct.toFixed(0)}%
+                </td>
+                <td className="py-1 px-1 text-center tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                  {fmtUsd(r.avgVol)}
+                </td>
+                <td className="py-1 px-1 text-center">
+                  <StatusPill status={r.status} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </CardShell>
+  )
+}
