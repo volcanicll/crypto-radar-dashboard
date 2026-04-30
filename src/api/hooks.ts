@@ -5,7 +5,10 @@ import { analyzeAccumulation } from '../logic/accumulation'
 import { detectOIAlerts } from '../logic/oi-detector'
 import { computeAllScores } from '../logic/scoring'
 import { detectShortFuel } from '../logic/short-fuel'
+import { processNarrativeData, manualMomentumCheck } from '../logic/narrative-tracker'
 import type { AccumulationResult, OIAlert, MarketOverview, NarrativeRadarData } from '../types'
+
+export { manualMomentumCheck } from '../logic/narrative-tracker'
 
 // 轻量数据 60s 刷新
 export function useMarketData() {
@@ -100,7 +103,9 @@ export function useNarrativeRadar() {
     async () => {
       const resp = await fetch('/api/narratives')
       if (!resp.ok) throw new Error('Narrative radar API unavailable')
-      return resp.json()
+      const data = await resp.json()
+      if (data.tokens) processNarrativeData(data.tokens)
+      return data
     },
     { refreshInterval: 30_000, dedupingInterval: 20_000 }
   )
