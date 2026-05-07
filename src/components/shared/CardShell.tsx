@@ -19,8 +19,9 @@ export default function CardShell({ title, icon, children, extra }: Props) {
     >
       {/* 卡片头部 — 拖拽手柄 */}
       <div
-        className="flex items-center justify-between px-3 py-2 cursor-move drag-handle select-none"
+        className="flex items-center justify-between px-3 py-2 cursor-grab active:cursor-grabbing drag-handle select-none"
         style={{ borderBottom: '1px solid var(--border-card)' }}
+        title="拖动模块"
       >
         <div className="flex items-center gap-2">
           {icon && <span>{icon}</span>}

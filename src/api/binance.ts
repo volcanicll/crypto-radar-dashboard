@@ -2,6 +2,51 @@ import type { Kline, Ticker24h, OIHistPoint, LongShortRatio, LiquidationEvent } 
 
 const FAPI = 'https://fapi.binance.com'
 
+interface ExchangeSymbol {
+  symbol: string
+  quoteAsset: string
+  contractType: string
+  status: string
+}
+
+interface ExchangeInfo {
+  symbols: ExchangeSymbol[]
+}
+
+type BinanceKline = [
+  number,
+  string,
+  string,
+  string,
+  string,
+  string,
+  number,
+  string,
+  ...unknown[],
+]
+
+interface RawTicker24h {
+  symbol: string
+  lastPrice: string
+  priceChangePercent: string
+  quoteVolume: string
+}
+
+interface RawPremiumIndex {
+  symbol: string
+  lastFundingRate: string
+}
+
+interface RawFundingRate {
+  fundingRate: string
+}
+
+interface RawOIHist {
+  timestamp: number
+  sumOpenInterest: string
+  sumOpenInterestValue: string
+}
+
 async function apiGet<T>(endpoint: string, params?: Record<string, string | number>): Promise<T | null> {
   const url = new URL(endpoint, FAPI)
   if (params) {
@@ -18,16 +63,16 @@ async function apiGet<T>(endpoint: string, params?: Record<string, string | numb
 
 /** 获取所有 USDT 永续合约 */
 export async function getPerpSymbols(): Promise<string[]> {
-  const info = await apiGet<any>('/fapi/v1/exchangeInfo')
+  const info = await apiGet<ExchangeInfo>('/fapi/v1/exchangeInfo')
   if (!info) return []
   return info.symbols
-    .filter((s: any) => s.quoteAsset === 'USDT' && s.contractType === 'PERPETUAL' && s.status === 'TRADING')
-    .map((s: any) => s.symbol)
+    .filter((s) => s.quoteAsset === 'USDT' && s.contractType === 'PERPETUAL' && s.status === 'TRADING')
+    .map((s) => s.symbol)
 }
 
 /** 日K线 */
 export async function getDailyKlines(symbol: string, limit = 180): Promise<Kline[] | null> {
-  const raw = await apiGet<any[]>('/fapi/v1/klines', { symbol, interval: '1d', limit })
+  const raw = await apiGet<BinanceKline[]>('/fapi/v1/klines', { symbol, interval: '1d', limit })
   if (!raw || !Array.isArray(raw)) return null
   return raw.map(k => ({
     ts: k[0], open: +k[1], high: +k[2], low: +k[3], close: +k[4], vol: +k[7],
@@ -36,7 +81,7 @@ export async function getDailyKlines(symbol: string, limit = 180): Promise<Kline
 
 /** 全市场 24h 行情 */
 export async function getAllTickers(): Promise<Record<string, Ticker24h>> {
-  const raw = await apiGet<any[]>('/fapi/v1/ticker/24hr')
+  const raw = await apiGet<RawTicker24h[]>('/fapi/v1/ticker/24hr')
   if (!raw) return {}
   const map: Record<string, Ticker24h> = {}
   for (const t of raw) {
@@ -54,7 +99,7 @@ export async function getAllTickers(): Promise<Record<string, Ticker24h>> {
 
 /** 全市场费率 */
 export async function getAllFundingRates(): Promise<Record<string, number>> {
-  const raw = await apiGet<any[]>('/fapi/v1/premiumIndex')
+  const raw = await apiGet<RawPremiumIndex[]>('/fapi/v1/premiumIndex')
   if (!raw) return {}
   const map: Record<string, number> = {}
   for (const p of raw) {
@@ -67,16 +112,16 @@ export async function getAllFundingRates(): Promise<Record<string, number>> {
 
 /** 费率历史 */
 export async function getFundingRateHistory(symbol: string, limit = 5): Promise<number[]> {
-  const raw = await apiGet<any[]>('/fapi/v1/fundingRate', { symbol, limit })
+  const raw = await apiGet<RawFundingRate[]>('/fapi/v1/fundingRate', { symbol, limit })
   if (!raw) return []
-  return raw.map((f: any) => +f.fundingRate * 100)
+  return raw.map((f) => +f.fundingRate * 100)
 }
 
 /** OI 历史 */
 export async function getOIHist(symbol: string, period = '1h', limit = 48): Promise<OIHistPoint[] | null> {
-  const raw = await apiGet<any[]>('/futures/data/openInterestHist', { symbol, period, limit })
+  const raw = await apiGet<RawOIHist[]>('/futures/data/openInterestHist', { symbol, period, limit })
   if (!raw || !Array.isArray(raw)) return null
-  return raw.map((x: any) => ({
+  return raw.map((x) => ({
     timestamp: x.timestamp,
     sumOpenInterest: +x.sumOpenInterest,
     sumOpenInterestValue: +x.sumOpenInterestValue,

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import Sparkline from '../shared/Sparkline'
 import { Pill } from '../shared/StatusPill'
@@ -16,7 +17,7 @@ interface Props {
   signalStatus?: SignalStatusMap
 }
 
-export default function OIMonitor({ data, onSelect, signalStatus }: Props) {
+function OIMonitor({ data, onSelect, signalStatus }: Props) {
   return (
     <CardShell
       title={`OI 异动 ×${data.length}`}
@@ -43,6 +44,8 @@ export default function OIMonitor({ data, onSelect, signalStatus }: Props) {
                   key={a.symbol}
                   className="table-row cursor-pointer slide-down"
                   onClick={() => onSelect?.(a.symbol)}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter') onSelect?.(a.symbol) }}
                 >
                   <td className="py-1 px-1 font-semibold">
                     <span style={{ color: a.inPool ? 'var(--accent)' : 'var(--text-primary)' }}>
@@ -80,3 +83,5 @@ export default function OIMonitor({ data, onSelect, signalStatus }: Props) {
     </CardShell>
   )
 }
+
+export default memo(OIMonitor)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import type { CoinData } from '../../types'
 
 interface Props {
@@ -59,7 +59,6 @@ export default function SearchPalette({
 
   useEffect(() => {
     if (open) {
-      setQuery('')
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [open])
@@ -97,27 +96,45 @@ export default function SearchPalette({
       .slice(0, 20)
   }, [query, allSymbols, coinData, poolSymbols, oiSymbols, ambushSymbols, squeezeSymbols, narrativeSymbols])
 
-  const handleSelect = (symbol: string) => {
-    onSelectSymbol(symbol)
+  const handleClose = useCallback(() => {
+    setQuery('')
     onClose()
-  }
+  }, [onClose])
+
+  const handleSelect = useCallback((symbol: string) => {
+    onSelectSymbol(symbol)
+    handleClose()
+  }, [handleClose, onSelectSymbol])
+
+  const quickSymbols = useMemo(() => {
+    const weighted = allSymbols
+      .map(symbol => ({
+        symbol,
+        coin: symbol.replace('USDT', ''),
+        cards: getCardsForSymbol(symbol, poolSymbols, oiSymbols, ambushSymbols, squeezeSymbols, narrativeSymbols),
+        pxChg: coinData[symbol]?.pxChg ?? 0,
+      }))
+      .sort((a, b) => b.cards.length - a.cards.length || Math.abs(b.pxChg) - Math.abs(a.pxChg))
+      .slice(0, 8)
+    return weighted
+  }, [allSymbols, coinData, poolSymbols, oiSymbols, ambushSymbols, squeezeSymbols, narrativeSymbols])
 
   // ESC 关闭
   useEffect(() => {
     if (!open) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') handleClose()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [open, onClose])
+  }, [open, handleClose])
 
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" role="dialog" aria-modal="true" aria-label="搜索币种">
       {/* 遮罩 */}
-      <div className="fixed inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
+      <div className="fixed inset-0" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={handleClose} />
       {/* 搜索面板 */}
       <div
         className="relative w-full max-w-lg rounded-lg overflow-hidden"
@@ -134,6 +151,7 @@ export default function SearchPalette({
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
+            aria-label="搜索币种"
             placeholder="搜索币种 (如 BTC, ETH...)"
             className="flex-1 bg-transparent outline-none text-sm"
             style={{ color: 'var(--text-primary)' }}
@@ -154,14 +172,32 @@ export default function SearchPalette({
             </div>
           )}
           {!query.trim() && (
-            <div className="flex items-center justify-center h-20 text-xs" style={{ color: 'var(--text-muted)' }}>
-              输入币种名称搜索
+            <div className="p-4">
+              <div className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+                热门信号
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {quickSymbols.map(s => (
+                  <button
+                    key={s.symbol}
+                    onClick={() => handleSelect(s.symbol)}
+                    className="text-xs px-2 py-1 rounded cursor-pointer"
+                    style={{ background: 'var(--border-card)', color: 'var(--text-secondary)' }}
+                  >
+                    {s.coin}
+                  </button>
+                ))}
+                {quickSymbols.length === 0 && (
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>等待数据加载后可快速跳转</span>
+                )}
+              </div>
             </div>
           )}
           {results.map(r => (
             <button
               key={r.symbol}
               onClick={() => handleSelect(r.symbol)}
+              aria-label={`打开 ${r.coin} 详情`}
               className="w-full flex items-center justify-between px-4 py-2.5 text-left table-row cursor-pointer"
             >
               <div className="flex items-center gap-3">

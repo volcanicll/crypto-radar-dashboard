@@ -1,14 +1,23 @@
+import { memo, useEffect, useState } from 'react'
 import type { MarketOverview } from '../../types'
 
 interface Props {
   data: MarketOverview | undefined
-  countdown: number
   onSearchOpen?: () => void
 }
 
-export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
+function StatusBar({ data, onSearchOpen }: Props) {
+  const [countdown, setCountdown] = useState(60)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCountdown(prev => (prev <= 1 ? 60 : prev - 1))
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   return (
-    <div
+    <header
       className="flex items-center justify-between gap-4 px-4 py-3 select-none max-[820px]:flex-wrap"
       style={{
         background: 'var(--bg-card)',
@@ -27,7 +36,7 @@ export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
         </div>
       </div>
 
-      <div className="flex items-center gap-5 text-xs overflow-auto" style={{ color: 'var(--text-secondary)' }}>
+      <nav aria-label="市场总览" className="flex items-center gap-5 text-xs overflow-auto" style={{ color: 'var(--text-secondary)' }}>
         {data && (
           <>
             <span>BTC <b style={{ color: 'var(--text-primary)' }}>${data.btcPrice?.toLocaleString()}</b></span>
@@ -39,7 +48,7 @@ export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
             </b></span>
           </>
         )}
-      </div>
+      </nav>
 
       <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
         {data && <span>{data.lastScanTime}</span>}
@@ -48,6 +57,7 @@ export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
         </span>
         <button
           onClick={onSearchOpen}
+          aria-label="打开搜索"
           className="text-xs px-1.5 py-0.5 rounded cursor-pointer"
           style={{ color: 'var(--text-muted)', background: 'var(--border-card)' }}
           title="搜索 (⌘K)"
@@ -56,6 +66,7 @@ export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
         </button>
         <button
           onClick={() => { localStorage.removeItem('dashboard-layout'); location.reload() }}
+          aria-label="重置布局"
           className="text-xs px-1.5 py-0.5 rounded cursor-pointer"
           style={{ color: 'var(--text-muted)', background: 'var(--border-card)' }}
           title="Reset layout"
@@ -63,6 +74,8 @@ export default function StatusBar({ data, countdown, onSearchOpen }: Props) {
           ↺
         </button>
       </div>
-    </div>
+    </header>
   )
 }
+
+export default memo(StatusBar)

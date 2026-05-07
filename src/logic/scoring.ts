@@ -1,4 +1,4 @@
-import type { AccumulationResult, OIAlert, ChaseCandidate, CombinedScore, AmbushCandidate, CoinData } from '../types'
+import type { AccumulationResult, OIAlert, ChaseCandidate, CombinedScore, AmbushCandidate, CoinData, TickerMap } from '../types'
 
 export function fmtUsd(v: number): string {
   if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`
@@ -217,7 +217,7 @@ export function scoreAmbush(
 export function computeAllScores(
   poolMap: Record<string, AccumulationResult>,
   oiAlerts: OIAlert[],
-  tickers: Record<string, any>,
+  tickers: TickerMap,
   fundingRates: Record<string, number>,
   mcapMap: Record<string, number>,
   trendingCoins: Set<string>,

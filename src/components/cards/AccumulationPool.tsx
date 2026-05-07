@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import StatusPill from '../shared/StatusPill'
 import ScoreBar from '../shared/ScoreBar'
@@ -17,7 +18,7 @@ const MARKER: Record<string, { label: string; color: string }> = {
   persistent: { label: '⚡', color: '#f59e0b' },
 }
 
-export default function AccumulationPool({ data, onSelect, signalStatus }: Props) {
+function AccumulationPool({ data, onSelect, signalStatus }: Props) {
   if (!data || data.length === 0) {
     return (
       <CardShell title="收筹标的池" icon="🏦">
@@ -54,6 +55,8 @@ export default function AccumulationPool({ data, onSelect, signalStatus }: Props
                   key={r.symbol}
                   className="table-row cursor-pointer"
                   onClick={() => onSelect?.(r.symbol)}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter') onSelect?.(r.symbol) }}
                 >
                   <td className="py-1 px-1 font-semibold" style={{ color: 'var(--accent)' }}>
                     {r.coin}
@@ -83,3 +86,5 @@ export default function AccumulationPool({ data, onSelect, signalStatus }: Props
     </CardShell>
   )
 }
+
+export default memo(AccumulationPool)

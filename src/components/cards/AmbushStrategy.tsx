@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import { Pill } from '../shared/StatusPill'
 import { fmtMcap } from '../../logic/scoring'
@@ -16,7 +17,7 @@ interface Props {
   signalStatus?: SignalStatusMap
 }
 
-export default function AmbushStrategy({ data, onSelect, signalStatus }: Props) {
+function AmbushStrategy({ data, onSelect, signalStatus }: Props) {
   return (
     <CardShell
       title="埋伏策略"
@@ -38,6 +39,8 @@ export default function AmbushStrategy({ data, onSelect, signalStatus }: Props) 
                   key={s.symbol}
                   className="px-2 py-1.5 rounded cursor-pointer table-row"
                   onClick={() => onSelect?.(s.symbol)}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter') onSelect?.(s.symbol) }}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -76,3 +79,5 @@ export default function AmbushStrategy({ data, onSelect, signalStatus }: Props) 
     </CardShell>
   )
 }
+
+export default memo(AmbushStrategy)

@@ -13,40 +13,54 @@ interface Props {
 
 export default function DetailDrawer({ symbol, coinData, onClose }: Props) {
   const { data: ratioData } = useLongShortRatio(symbol)
-  const [oiHist, setOiHist] = useState<number[]>([])
-  const [frHist, setFrHist] = useState<number[]>([])
+  const [oiHistState, setOiHistState] = useState<{ symbol: string; values: number[] } | null>(null)
+  const [frHistState, setFrHistState] = useState<{ symbol: string; values: number[] } | null>(null)
 
   useEffect(() => {
     if (!symbol) return
-    setOiHist([])
-    setFrHist([])
+    let cancelled = false
     getOIHist(symbol, '1h', 48).then(hist => {
-      if (hist) setOiHist(hist.map(h => h.sumOpenInterestValue))
+      if (!cancelled) setOiHistState({ symbol, values: hist?.map(h => h.sumOpenInterestValue) || [] })
     })
     getFundingRateHistory(symbol, 10).then(rates => {
-      setFrHist(rates)
+      if (!cancelled) setFrHistState({ symbol, values: rates })
     })
+    return () => { cancelled = true }
   }, [symbol])
+
+  useEffect(() => {
+    if (!symbol) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [symbol, onClose])
 
   if (!symbol) return null
 
   const d = coinData[symbol]
   const coin = symbol.replace('USDT', '')
+  const oiHist = oiHistState?.symbol === symbol ? oiHistState.values : []
+  const frHist = frHistState?.symbol === symbol ? frHistState.values : []
 
   return (
     <div
       className="fixed right-0 top-0 h-full z-50 flex"
       style={{ width: 360 }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${coin} 详情`}
     >
       {/* 遮罩 */}
       <div
-        className="fixed inset-0"
+        className="fixed inset-0 drawer-backdrop"
         style={{ background: 'rgba(0,0,0,0.5)' }}
         onClick={onClose}
       />
       {/* 抽屉 */}
       <div
-        className="relative ml-auto h-full overflow-auto"
+        className="relative ml-auto h-full overflow-auto drawer-panel"
         style={{
           width: 360,
           background: 'var(--bg-card)',
@@ -61,6 +75,7 @@ export default function DetailDrawer({ symbol, coinData, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
+            aria-label="关闭详情"
             className="text-lg px-2 hover:opacity-70"
             style={{ color: 'var(--text-muted)' }}
           >
@@ -89,7 +104,7 @@ export default function DetailDrawer({ symbol, coinData, onClose }: Props) {
                 <Tooltip
                   contentStyle={{ background: '#1e293b', border: 'none', borderRadius: 4, fontSize: 11 }}
                   labelStyle={{ display: 'none' }}
-                  formatter={(v: any) => [fmtUsd(Number(v)), 'OI']}
+                  formatter={(v: unknown) => [fmtUsd(Number(v || 0)), 'OI']}
                 />
                 <Line type="monotone" dataKey="v" stroke="#8b5cf6" strokeWidth={1.5} dot={false} />
               </LineChart>

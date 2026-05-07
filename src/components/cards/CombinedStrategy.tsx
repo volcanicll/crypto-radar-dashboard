@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import { fmtMcap } from '../../logic/scoring'
 import type { CombinedScore } from '../../types'
@@ -7,7 +8,7 @@ interface Props {
   onSelect?: (symbol: string) => void
 }
 
-export default function CombinedStrategy({ data, onSelect }: Props) {
+function CombinedStrategy({ data, onSelect }: Props) {
   return (
     <CardShell
       title="综合策略"
@@ -26,6 +27,8 @@ export default function CombinedStrategy({ data, onSelect }: Props) {
                 key={s.symbol}
                 className="px-2 py-1.5 rounded cursor-pointer table-row"
                 onClick={() => onSelect?.(s.symbol)}
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter') onSelect?.(s.symbol) }}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{s.coin}</span>
@@ -61,3 +64,5 @@ export default function CombinedStrategy({ data, onSelect }: Props) {
     </CardShell>
   )
 }
+
+export default memo(CombinedStrategy)

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import { fmtPct, fmtMcap } from '../../logic/scoring'
 import type { ShortFuelTarget, LiquidationEvent } from '../../types'
@@ -17,7 +18,7 @@ interface Props {
   signalStatus?: SignalStatusMap
 }
 
-export default function ShortFuel({ fuel, squeeze, liquidations, onSelect, signalStatus }: Props) {
+function ShortFuel({ fuel, squeeze, liquidations, onSelect, signalStatus }: Props) {
   return (
     <CardShell title="空头燃料 + 热度" icon="🔥">
       <div className="overflow-auto h-full space-y-3">
@@ -34,6 +35,8 @@ export default function ShortFuel({ fuel, squeeze, liquidations, onSelect, signa
                   key={t.symbol}
                   className="flex items-center justify-between px-2 py-1 rounded cursor-pointer table-row text-xs"
                   onClick={() => onSelect?.(t.symbol)}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter') onSelect?.(t.symbol) }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-semibold" style={{ color: 'var(--accent)' }}>{t.coin}</span>
@@ -65,6 +68,8 @@ export default function ShortFuel({ fuel, squeeze, liquidations, onSelect, signa
                   key={t.symbol}
                   className="flex items-center justify-between px-2 py-1 rounded cursor-pointer table-row text-xs"
                   onClick={() => onSelect?.(t.symbol)}
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter') onSelect?.(t.symbol) }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="font-semibold" style={{ color: 'var(--accent)' }}>{t.coin}</span>
@@ -111,3 +116,5 @@ export default function ShortFuel({ fuel, squeeze, liquidations, onSelect, signa
     </CardShell>
   )
 }
+
+export default memo(ShortFuel)

@@ -6,7 +6,7 @@ import { detectOIAlerts } from '../logic/oi-detector'
 import { computeAllScores } from '../logic/scoring'
 import { detectShortFuel } from '../logic/short-fuel'
 import { processNarrativeData } from '../logic/narrative-tracker'
-import type { AccumulationResult, OIAlert, MarketOverview, NarrativeRadarData, LongShortRatio, LiquidationEvent } from '../types'
+import type { AccumulationResult, OIAlert, MarketOverview, NarrativeRadarData, LongShortRatio, LiquidationEvent, TickerMap } from '../types'
 
 export { manualMomentumCheck } from '../logic/narrative-tracker'
 
@@ -55,7 +55,7 @@ export function useAccumulationPool(symbols: string[]) {
 }
 
 // OI 异动 5min 刷新
-export function useOIAlerts(poolSymbols: Set<string>, tickers: Record<string, any>) {
+export function useOIAlerts(poolSymbols: Set<string>, tickers: TickerMap) {
   const symbolList = Object.keys(tickers)
   // 取成交量 top150 + 标的池内放量的
   const topByVol = symbolList
@@ -75,7 +75,7 @@ export function useOIAlerts(poolSymbols: Set<string>, tickers: Record<string, an
 export function useScores(
   poolMap: Record<string, AccumulationResult>,
   oiAlerts: OIAlert[],
-  tickers: Record<string, any>,
+  tickers: TickerMap,
   fundingRates: Record<string, number>,
   mcapMap: Record<string, number>,
   trendingCoins: Set<string>,
@@ -88,7 +88,7 @@ export function useScores(
 }
 
 // 空头燃料
-export function useShortFuel(tickers: Record<string, any>, fundingRates: Record<string, number>) {
+export function useShortFuel(tickers: TickerMap, fundingRates: Record<string, number>) {
   return useSWR(
     'short-fuel',
     () => detectShortFuel(tickers, fundingRates),
@@ -112,7 +112,7 @@ export function useNarrativeRadar() {
 }
 
 // 市场总览
-export function useMarketOverview(tickers: Record<string, any>, fundingRates: Record<string, number>, poolCount: number) {
+export function useMarketOverview(tickers: TickerMap, fundingRates: Record<string, number>, poolCount: number) {
   return useSWR(
     ['overview', poolCount],
     () => {

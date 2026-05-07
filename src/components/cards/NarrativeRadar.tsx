@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import CardShell from '../shared/CardShell'
 import ScoreBar from '../shared/ScoreBar'
 import { Pill } from '../shared/StatusPill'
@@ -38,6 +38,7 @@ function TokenRow({ token }: { token: NarrativeToken }) {
       target="_blank"
       rel="noreferrer"
       className="block rounded px-2 py-1.5 table-row"
+      aria-label={`打开 ${token.symbol} 外部详情`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -125,7 +126,7 @@ function TokenRow({ token }: { token: NarrativeToken }) {
 
 const SIGNAL_MARKER: Record<string, string> = { new: '🆕', lost: '📉', persistent: '⚡' }
 
-export default function NarrativeRadar({ data, error, signalStatus }: Props) {
+function NarrativeRadar({ data, error, signalStatus }: Props) {
   const [filter, setFilter] = useState<NarrativeCategory | 'all'>('all')
   const [sortBy, setSortBy] = useState<'score' | 'chg1h' | 'buyRatio' | 'mc' | 'momentum'>('score')
   const [expanded, setExpanded] = useState(false)
@@ -277,7 +278,12 @@ export default function NarrativeRadar({ data, error, signalStatus }: Props) {
             )}
             <div className="grid grid-cols-2 gap-2 max-[1100px]:grid-cols-1">
               {tokenList.slice(0, 12).map((token) => (
-                <TokenRow key={token.address} token={token} />
+                <div key={token.address} className="relative">
+                  {signalStatus?.[`${token.symbol}-${token.chain}`] && (
+                    <span className="absolute top-1 right-1 text-xs">{SIGNAL_MARKER[signalStatus[`${token.symbol}-${token.chain}`]]}</span>
+                  )}
+                  <TokenRow token={token} />
+                </div>
               ))}
             </div>
             {filtered.length > 12 && (
@@ -295,3 +301,5 @@ export default function NarrativeRadar({ data, error, signalStatus }: Props) {
     </CardShell>
   )
 }
+
+export default memo(NarrativeRadar)

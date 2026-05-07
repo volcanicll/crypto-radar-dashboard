@@ -16,6 +16,8 @@ export interface Ticker24h {
   quoteVolume: number
 }
 
+export type TickerMap = Record<string, Ticker24h>
+
 export interface FundingRatePoint {
   symbol: string
   fundingRate: number
