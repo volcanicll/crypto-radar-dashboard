@@ -1,14 +1,16 @@
 import { memo } from 'react'
 import CardShell from '../shared/CardShell'
+import { WatchStar } from '../layout/WatchlistPanel'
 import { fmtMcap } from '../../logic/scoring'
 import type { CombinedScore } from '../../types'
 
 interface Props {
   data: CombinedScore[]
   onSelect?: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
 }
 
-function CombinedStrategy({ data, onSelect }: Props) {
+function CombinedStrategy({ data, onSelect, onToggleWatch }: Props) {
   return (
     <CardShell
       title="综合策略"
@@ -31,7 +33,10 @@ function CombinedStrategy({ data, onSelect }: Props) {
                 onKeyDown={e => { if (e.key === 'Enter') onSelect?.(s.symbol) }}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{s.coin}</span>
+                  <div className="flex items-center gap-1">
+                    <WatchStar symbol={s.symbol} onToggle={onToggleWatch ?? (() => {})} />
+                    <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{s.coin}</span>
+                  </div>
                   <span className="text-sm font-bold">{s.total}分</span>
                 </div>
                 <div className="flex gap-1">

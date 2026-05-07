@@ -132,3 +132,21 @@ body {
   from { opacity: 0; transform: translateX(24px); }
   to { opacity: 1; transform: translateX(0); }
 }
+
+/* 自选浮层面板 */
+.watchlist-panel {
+  animation: watchlist-slide 220ms ease-out;
+}
+
+@keyframes watchlist-slide {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.watch-star {
+  transition: opacity 150ms ease, color 150ms ease;
+}
+
+.watch-star:hover {
+  opacity: 1 !important;
+}

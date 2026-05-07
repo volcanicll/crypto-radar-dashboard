@@ -4,9 +4,10 @@ import type { MarketOverview } from '../../types'
 interface Props {
   data: MarketOverview | undefined
   onSearchOpen?: () => void
+  onWatchlistOpen?: () => void
 }
 
-function StatusBar({ data, onSearchOpen }: Props) {
+function StatusBar({ data, onSearchOpen, onWatchlistOpen }: Props) {
   const [countdown, setCountdown] = useState(60)
 
   useEffect(() => {
@@ -63,6 +64,15 @@ function StatusBar({ data, onSearchOpen }: Props) {
           title="搜索 (⌘K)"
         >
           🔍
+        </button>
+        <button
+          onClick={onWatchlistOpen}
+          aria-label="打开自选列表"
+          className="text-xs px-1.5 py-0.5 rounded cursor-pointer"
+          style={{ color: 'var(--text-muted)', background: 'var(--border-card)' }}
+          title="自选列表 (⌘W)"
+        >
+          ⭐
         </button>
         <button
           onClick={() => { localStorage.removeItem('dashboard-layout'); location.reload() }}

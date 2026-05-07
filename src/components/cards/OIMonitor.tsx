@@ -2,6 +2,7 @@ import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import Sparkline from '../shared/Sparkline'
 import { Pill } from '../shared/StatusPill'
+import { WatchStar } from '../layout/WatchlistPanel'
 import type { OIAlert } from '../../types'
 import type { SignalStatusMap } from '../../logic/signal-tracker'
 
@@ -14,10 +15,11 @@ const MARKER: Record<string, { label: string; color: string }> = {
 interface Props {
   data: OIAlert[]
   onSelect?: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
   signalStatus?: SignalStatusMap
 }
 
-function OIMonitor({ data, onSelect, signalStatus }: Props) {
+function OIMonitor({ data, onSelect, onToggleWatch, signalStatus }: Props) {
   return (
     <CardShell
       title={`OI 异动 ×${data.length}`}
@@ -48,6 +50,7 @@ function OIMonitor({ data, onSelect, signalStatus }: Props) {
                   onKeyDown={e => { if (e.key === 'Enter') onSelect?.(a.symbol) }}
                 >
                   <td className="py-1 px-1 font-semibold">
+                    <WatchStar symbol={a.symbol} onToggle={onToggleWatch ?? (() => {})} />
                     <span style={{ color: a.inPool ? 'var(--accent)' : 'var(--text-primary)' }}>
                       {a.coin}
                     </span>

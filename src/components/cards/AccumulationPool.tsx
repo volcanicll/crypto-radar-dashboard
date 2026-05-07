@@ -2,6 +2,7 @@ import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import StatusPill from '../shared/StatusPill'
 import ScoreBar from '../shared/ScoreBar'
+import { WatchStar } from '../layout/WatchlistPanel'
 import { fmtUsd } from '../../logic/scoring'
 import type { AccumulationResult } from '../../types'
 import type { SignalStatusMap } from '../../logic/signal-tracker'
@@ -9,6 +10,7 @@ import type { SignalStatusMap } from '../../logic/signal-tracker'
 interface Props {
   data: AccumulationResult[]
   onSelect?: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
   signalStatus?: SignalStatusMap
 }
 
@@ -18,7 +20,7 @@ const MARKER: Record<string, { label: string; color: string }> = {
   persistent: { label: '⚡', color: '#f59e0b' },
 }
 
-function AccumulationPool({ data, onSelect, signalStatus }: Props) {
+function AccumulationPool({ data, onSelect, onToggleWatch, signalStatus }: Props) {
   if (!data || data.length === 0) {
     return (
       <CardShell title="收筹标的池" icon="🏦">
@@ -59,6 +61,7 @@ function AccumulationPool({ data, onSelect, signalStatus }: Props) {
                   onKeyDown={e => { if (e.key === 'Enter') onSelect?.(r.symbol) }}
                 >
                   <td className="py-1 px-1 font-semibold" style={{ color: 'var(--accent)' }}>
+                    <WatchStar symbol={r.symbol} onToggle={onToggleWatch ?? (() => {})} />
                     {r.coin}
                     {marker && <span className="ml-1">{MARKER[marker]?.label}</span>}
                   </td>

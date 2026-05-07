@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import CardShell from '../shared/CardShell'
+import { WatchStar } from '../layout/WatchlistPanel'
 import { fmtPct, fmtMcap } from '../../logic/scoring'
 import type { ShortFuelTarget, LiquidationEvent } from '../../types'
 import type { SignalStatusMap } from '../../logic/signal-tracker'
@@ -15,10 +16,11 @@ interface Props {
   squeeze: ShortFuelTarget[]
   liquidations?: LiquidationEvent[]
   onSelect?: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
   signalStatus?: SignalStatusMap
 }
 
-function ShortFuel({ fuel, squeeze, liquidations, onSelect, signalStatus }: Props) {
+function ShortFuel({ fuel, squeeze, liquidations, onSelect, onToggleWatch, signalStatus }: Props) {
   return (
     <CardShell title="空头燃料 + 热度" icon="🔥">
       <div className="overflow-auto h-full space-y-3">
@@ -39,6 +41,7 @@ function ShortFuel({ fuel, squeeze, liquidations, onSelect, signalStatus }: Prop
                   onKeyDown={e => { if (e.key === 'Enter') onSelect?.(t.symbol) }}
                 >
                   <div className="flex items-center gap-2">
+                    <WatchStar symbol={t.symbol} onToggle={onToggleWatch ?? (() => {})} />
                     <span className="font-semibold" style={{ color: 'var(--accent)' }}>{t.coin}</span>
                     {marker && <span>{MARKER[marker]}</span>}
                     <span style={{ color: t.pxChg >= 0 ? 'var(--green)' : 'var(--red)' }}>
@@ -72,6 +75,7 @@ function ShortFuel({ fuel, squeeze, liquidations, onSelect, signalStatus }: Prop
                   onKeyDown={e => { if (e.key === 'Enter') onSelect?.(t.symbol) }}
                 >
                   <div className="flex items-center gap-2">
+                    <WatchStar symbol={t.symbol} onToggle={onToggleWatch ?? (() => {})} />
                     <span className="font-semibold" style={{ color: 'var(--accent)' }}>{t.coin}</span>
                     {marker && <span>{MARKER[marker]}</span>}
                     <span style={{ color: t.pxChg >= 0 ? 'var(--green)' : 'var(--red)' }}>

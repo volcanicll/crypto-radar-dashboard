@@ -83,11 +83,12 @@ interface Props {
     shortFuel?: boolean
   }
   onSelectSymbol: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
   signalDiff?: TrackResult
 }
 
 function Dashboard({
-  pool, oiAlerts, chase, combined, ambush, fuel, squeeze, liquidations, narrative, narrativeError, loading, onSelectSymbol, signalDiff,
+  pool, oiAlerts, chase, combined, ambush, fuel, squeeze, liquidations, narrative, narrativeError, loading, onSelectSymbol, onToggleWatch, signalDiff,
 }: Props) {
   const { width, containerRef, mounted } = useContainerWidth()
   const [layouts, setLayouts] = useState<LayoutItem[]>(() => loadLayout() || DEFAULT_LAYOUT)
@@ -153,32 +154,32 @@ function Dashboard({
         </div>
         <div key="pool" data-card-id="pool">
           <ErrorBoundary>
-            {loading?.pool ? <CardSkeleton title="收筹标的池" icon="🏦" rows={8} /> : <AccumulationPool data={pool} onSelect={onSelectSymbol} signalStatus={signalDiff?.pool} />}
+            {loading?.pool ? <CardSkeleton title="收筹标的池" icon="🏦" rows={8} /> : <AccumulationPool data={pool} onSelect={onSelectSymbol} onToggleWatch={onToggleWatch} signalStatus={signalDiff?.pool} />}
           </ErrorBoundary>
         </div>
         <div key="oi" data-card-id="oi">
           <ErrorBoundary>
-            {loading?.oi ? <CardSkeleton title="OI 异动" icon="📊" rows={8} /> : <OIMonitor data={oiAlerts} onSelect={onSelectSymbol} signalStatus={signalDiff?.oiAlerts} />}
+            {loading?.oi ? <CardSkeleton title="OI 异动" icon="📊" rows={8} /> : <OIMonitor data={oiAlerts} onSelect={onSelectSymbol} onToggleWatch={onToggleWatch} signalStatus={signalDiff?.oiAlerts} />}
           </ErrorBoundary>
         </div>
         <div key="chase">
           <ErrorBoundary>
-            {loading?.scores ? <CardSkeleton title="追多策略" icon="🔥" rows={6} /> : <ChaseStrategy data={chase} onSelect={onSelectSymbol} />}
+            {loading?.scores ? <CardSkeleton title="追多策略" icon="🔥" rows={6} /> : <ChaseStrategy data={chase} onSelect={onSelectSymbol} onToggleWatch={onToggleWatch} />}
           </ErrorBoundary>
         </div>
         <div key="combined">
           <ErrorBoundary>
-            {loading?.scores ? <CardSkeleton title="综合策略" icon="📊" rows={7} /> : <CombinedStrategy data={combined} onSelect={onSelectSymbol} />}
+            {loading?.scores ? <CardSkeleton title="综合策略" icon="📊" rows={7} /> : <CombinedStrategy data={combined} onSelect={onSelectSymbol} onToggleWatch={onToggleWatch} />}
           </ErrorBoundary>
         </div>
         <div key="shortFuel" data-card-id="shortFuel">
           <ErrorBoundary>
-            {loading?.shortFuel ? <CardSkeleton title="空头燃料 + 热度" icon="🔥" rows={6} /> : <ShortFuel fuel={fuel} squeeze={squeeze} liquidations={liquidations} onSelect={onSelectSymbol} signalStatus={signalDiff?.squeeze} />}
+            {loading?.shortFuel ? <CardSkeleton title="空头燃料 + 热度" icon="🔥" rows={6} /> : <ShortFuel fuel={fuel} squeeze={squeeze} liquidations={liquidations} onSelect={onSelectSymbol} onToggleWatch={onToggleWatch} signalStatus={signalDiff?.squeeze} />}
           </ErrorBoundary>
         </div>
         <div key="ambush" data-card-id="ambush">
           <ErrorBoundary>
-            {loading?.scores ? <CardSkeleton title="埋伏策略" icon="🎯" rows={6} /> : <AmbushStrategy data={ambush} onSelect={onSelectSymbol} signalStatus={signalDiff?.ambush} />}
+            {loading?.scores ? <CardSkeleton title="埋伏策略" icon="🎯" rows={6} /> : <AmbushStrategy data={ambush} onSelect={onSelectSymbol} onToggleWatch={onToggleWatch} signalStatus={signalDiff?.ambush} />}
           </ErrorBoundary>
         </div>
       </ResponsiveGridLayout>

@@ -1,14 +1,16 @@
 import { memo } from 'react'
 import CardShell from '../shared/CardShell'
+import { WatchStar } from '../layout/WatchlistPanel'
 import { fmtPct, fmtMcap } from '../../logic/scoring'
 import type { ChaseCandidate } from '../../types'
 
 interface Props {
   data: ChaseCandidate[]
   onSelect?: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
 }
 
-function ChaseStrategy({ data, onSelect }: Props) {
+function ChaseStrategy({ data, onSelect, onToggleWatch }: Props) {
   return (
     <CardShell title="追多策略" icon="🔥" extra={<span className="text-xs" style={{ color: 'var(--text-muted)' }}>费率排名</span>}>
       <div className="overflow-auto h-full">
@@ -27,6 +29,7 @@ function ChaseStrategy({ data, onSelect }: Props) {
                 onKeyDown={e => { if (e.key === 'Enter') onSelect?.(c.symbol) }}
               >
                 <div className="flex items-center gap-2">
+                  <WatchStar symbol={c.symbol} onToggle={onToggleWatch ?? (() => {})} />
                   <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{c.coin}</span>
                   <span className="text-xs" style={{ color: 'var(--red)' }}>
                     费{c.frPct >= 0 ? '+' : ''}{c.frPct.toFixed(3)}%

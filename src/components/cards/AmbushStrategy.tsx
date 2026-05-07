@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import CardShell from '../shared/CardShell'
 import { Pill } from '../shared/StatusPill'
+import { WatchStar } from '../layout/WatchlistPanel'
 import { fmtMcap } from '../../logic/scoring'
 import type { AmbushCandidate } from '../../types'
 import type { SignalStatusMap } from '../../logic/signal-tracker'
@@ -14,10 +15,11 @@ const MARKER: Record<string, string> = {
 interface Props {
   data: AmbushCandidate[]
   onSelect?: (symbol: string) => void
+  onToggleWatch?: (symbol: string) => void
   signalStatus?: SignalStatusMap
 }
 
-function AmbushStrategy({ data, onSelect, signalStatus }: Props) {
+function AmbushStrategy({ data, onSelect, onToggleWatch, signalStatus }: Props) {
   return (
     <CardShell
       title="埋伏策略"
@@ -44,6 +46,7 @@ function AmbushStrategy({ data, onSelect, signalStatus }: Props) {
                 >
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
+                      <WatchStar symbol={s.symbol} onToggle={onToggleWatch ?? (() => {})} />
                       <span className="font-semibold text-sm" style={{ color: 'var(--accent)' }}>{s.coin}</span>
                       {marker && <span className="text-xs">{MARKER[marker]}</span>}
                       <span className="text-sm font-bold">{s.total}分</span>

@@ -3,6 +3,7 @@ import StatusBar from './components/layout/StatusBar'
 import SignalSummaryBar from './components/layout/SignalSummaryBar'
 import Dashboard from './components/layout/Dashboard'
 import SearchPalette from './components/layout/SearchPalette'
+import WatchlistPanel from './components/layout/WatchlistPanel'
 import { useMarketData, useAccumulationPool, useOIAlerts, useScores, useShortFuel, useNarrativeRadar, useMarketOverview, useLiquidations } from './api/hooks'
 import { requestNotificationPermission, notifyFiringPool, notifyOIAlert, notifyNarrativeMomentum, notifyShortSqueeze } from './logic/notifications'
 import { trackSignals, type TrackResult } from './logic/signal-tracker'
@@ -15,18 +16,23 @@ const EMPTY_FUNDING_RATES: Record<string, number> = {}
 function App() {
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [watchlistOpen, setWatchlistOpen] = useState(false)
 
   // 浏览器通知权限请求
   useEffect(() => {
     requestNotificationPermission()
   }, [])
 
-  // Cmd+K 搜索快捷键
+  // Cmd+K 搜索 / Cmd+W 自选快捷键
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         setSearchOpen(prev => !prev)
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
+        e.preventDefault()
+        setWatchlistOpen(prev => !prev)
       }
     }
     window.addEventListener('keydown', handler)
@@ -157,11 +163,16 @@ function App() {
     setSelectedSymbol(symbol)
   }, [])
 
+  const handleToggleWatch = useCallback((_symbol: string) => {
+    // WatchStar 内部已处理 localStorage，此处仅触发面板刷新
+  }, [])
+
   return (
     <div className="app-shell h-dvh overflow-hidden flex flex-col" style={{ background: 'var(--bg-primary)' }}>
       <StatusBar
         data={overview}
         onSearchOpen={() => setSearchOpen(true)}
+        onWatchlistOpen={() => setWatchlistOpen(true)}
       />
       <SignalSummaryBar
         pool={pool || []}
@@ -191,6 +202,7 @@ function App() {
             shortFuel: !shortFuelData,
           }}
           onSelectSymbol={handleSelectSymbol}
+          onToggleWatch={handleToggleWatch}
           signalDiff={signalDiff}
         />
       </main>
@@ -211,6 +223,13 @@ function App() {
         ambushSymbols={searchSets.ambush}
         squeezeSymbols={searchSets.squeeze}
         narrativeSymbols={searchSets.narrative}
+      />
+      <WatchlistPanel
+        open={watchlistOpen}
+        onClose={() => setWatchlistOpen(false)}
+        tickers={tickers}
+        coinData={scores?.coinData || {}}
+        onToggleWatch={handleToggleWatch}
       />
     </div>
   )
